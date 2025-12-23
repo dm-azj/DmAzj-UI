@@ -18,12 +18,11 @@ local Theme = {
 }
 
 local TweenInfoFast = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-
 local function Tween(obj, props)
     TweenService:Create(obj, TweenInfoFast, props):Play()
 end
 
--- Single running notification tracker
+-- Notification tracker
 local currentNotification = nil
 
 function Library:SetTheme(tbl)
@@ -34,12 +33,9 @@ end
 
 function Library:Notify(text, duration)
     duration = duration or 3
-
-    -- Remove previous notification if exists
     if currentNotification and currentNotification.Parent then
         currentNotification:Destroy()
     end
-
     local gui = Instance.new("ScreenGui", Player.PlayerGui)
     gui.ResetOnSpawn = false
     currentNotification = gui
@@ -93,6 +89,11 @@ function Library:CreateWindow(titleText)
     title.TextSize = 20
     title.TextColor3 = Theme.Text
 
+    -- Pages container
+    local pages = Instance.new("Folder", main)
+    local CurrentTab
+
+    -- Minimize button (smooth)
     local minimize = Instance.new("TextButton", main)
     minimize.Size = UDim2.new(0,30,0,30)
     minimize.Position = UDim2.new(1,-40,0,8)
@@ -103,6 +104,22 @@ function Library:CreateWindow(titleText)
     minimize.TextColor3 = Theme.Text
     Instance.new("UICorner", minimize)
 
+    local open = true
+    minimize.MouseButton1Click:Connect(function()
+        open = not open
+        Tween(main, {Size = open and UDim2.new(0,480,0,360) or UDim2.new(0,480,0,55)})
+        for _,v in pairs(pages:GetChildren()) do
+            if open then
+                v.Visible = true
+                Tween(v, {Position = UDim2.new(0,10,0,85)})
+            else
+                Tween(v, {Position = UDim2.new(0,10,0,-v.AbsoluteSize.Y)})
+                task.delay(0.2,function() v.Visible = false end)
+            end
+        end
+        minimize.Text = open and "-" or "+"
+    end)
+
     local tabsBar = Instance.new("Frame", main)
     tabsBar.Size = UDim2.new(1,0,0,36)
     tabsBar.Position = UDim2.new(0,0,0,45)
@@ -110,18 +127,6 @@ function Library:CreateWindow(titleText)
     local tabsLayout = Instance.new("UIListLayout", tabsBar)
     tabsLayout.FillDirection = Enum.FillDirection.Horizontal
     tabsLayout.Padding = UDim.new(0,8)
-
-    local pages = Instance.new("Folder", main)
-    local CurrentTab
-
-    minimize.MouseButton1Click:Connect(function()
-        local open = false
-        for _,v in pairs(pages:GetChildren()) do
-            open = v.Visible
-            v.Visible = not v.Visible
-        end
-        Tween(main, {Size = open and UDim2.new(0,480,0,55) or UDim2.new(0,480,0,360)})
-    end)
 
     local Window = {}
 
@@ -156,6 +161,7 @@ function Library:CreateWindow(titleText)
 
         local Tab = {}
 
+        -- Button
         function Tab:AddButton(text, callback)
             local btn = Instance.new("TextButton", page)
             btn.Size = UDim2.new(1,0,0,40)
@@ -172,6 +178,7 @@ function Library:CreateWindow(titleText)
             end)
         end
 
+        -- Slider
         function Tab:AddSlider(text, min, max, callback)
             local holder = Instance.new("Frame", page)
             holder.Size = UDim2.new(1,0,0,55)
@@ -200,13 +207,13 @@ function Library:CreateWindow(titleText)
             bar.InputBegan:Connect(function(i)
                 if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
                     dragging = true
-                    main.Draggable = false -- disable GUI drag
+                    main.Draggable = false
                 end
             end)
-            UIS.InputEnded:Connect(function(i)
+            UIS.InputEnded:Connect(function()
                 if dragging then
                     dragging = false
-                    main.Draggable = true -- re-enable GUI drag
+                    main.Draggable = true
                 end
             end)
             UIS.InputChanged:Connect(function(i)
@@ -219,7 +226,7 @@ function Library:CreateWindow(titleText)
             end)
         end
 
-        -- AddDropdown / AddKeybind / AddToggle logic can remain as previous version
+        -- Dropdown
         function Tab:AddDropdown(text, list, callback)
             local open = false
             local holder = Instance.new("Frame", page)
@@ -264,6 +271,7 @@ function Library:CreateWindow(titleText)
             end
         end
 
+        -- Keybind
         function Tab:AddKeybind(text, key, callback)
             local lbl = Instance.new("TextLabel", page)
             lbl.Size = UDim2.new(1,0,0,35)
