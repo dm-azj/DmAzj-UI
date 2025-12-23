@@ -1,13 +1,13 @@
 local Library = {}
 Library.__index = Library
 
+-- Services
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
-local HttpService = game:GetService("HttpService")
-
 local Player = Players.LocalPlayer
 
+-- Theme
 local Theme = {
     Background = Color3.fromRGB(18,22,28),
     Container = Color3.fromRGB(25,30,38),
@@ -23,21 +23,32 @@ local function Tween(obj, props)
     TweenService:Create(obj, TweenInfoFast, props):Play()
 end
 
+-- Single running notification tracker
+local currentNotification = nil
+
 function Library:SetTheme(tbl)
     for k,v in pairs(tbl) do
         Theme[k] = v
     end
 end
 
-function Library:Notify(text, time)
-    time = time or 3
+function Library:Notify(text, duration)
+    duration = duration or 3
+
+    -- Remove previous notification if exists
+    if currentNotification and currentNotification.Parent then
+        currentNotification:Destroy()
+    end
+
     local gui = Instance.new("ScreenGui", Player.PlayerGui)
     gui.ResetOnSpawn = false
+    currentNotification = gui
 
     local frame = Instance.new("Frame", gui)
-    frame.Size = UDim2.new(0, 300, 0, 45)
-    frame.Position = UDim2.new(1, 320, 1, -70)
+    frame.Size = UDim2.new(0,300,0,45)
+    frame.Position = UDim2.new(1,320,1,-70)
     frame.BackgroundColor3 = Theme.Container
+    frame.ZIndex = 10
     Instance.new("UICorner", frame)
 
     local lbl = Instance.new("TextLabel", frame)
@@ -48,12 +59,14 @@ function Library:Notify(text, time)
     lbl.Font = Enum.Font.Gotham
     lbl.TextSize = 15
     lbl.TextColor3 = Theme.Text
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
 
     Tween(frame, {Position = UDim2.new(1,-320,1,-70)})
-    task.delay(time, function()
+    task.delay(duration, function()
         Tween(frame, {Position = UDim2.new(1,320,1,-70)})
         task.delay(0.3, function()
             gui:Destroy()
+            currentNotification = nil
         end)
     end)
 end
@@ -64,7 +77,7 @@ function Library:CreateWindow(titleText)
     gui.ResetOnSpawn = false
 
     local main = Instance.new("Frame", gui)
-    main.Size = UDim2.new(0, 480, 0, 360)
+    main.Size = UDim2.new(0,480,0,360)
     main.Position = UDim2.new(0.5,-240,0.5,-180)
     main.BackgroundColor3 = Theme.Background
     main.Active = true
@@ -94,7 +107,6 @@ function Library:CreateWindow(titleText)
     tabsBar.Size = UDim2.new(1,0,0,36)
     tabsBar.Position = UDim2.new(0,0,0,45)
     tabsBar.BackgroundTransparency = 1
-
     local tabsLayout = Instance.new("UIListLayout", tabsBar)
     tabsLayout.FillDirection = Enum.FillDirection.Horizontal
     tabsLayout.Padding = UDim.new(0,8)
@@ -103,9 +115,10 @@ function Library:CreateWindow(titleText)
     local CurrentTab
 
     minimize.MouseButton1Click:Connect(function()
-        local open = pages:GetChildren()[1].Visible
+        local open = false
         for _,v in pairs(pages:GetChildren()) do
-            v.Visible = not open
+            open = v.Visible
+            v.Visible = not v.Visible
         end
         Tween(main, {Size = open and UDim2.new(0,480,0,55) or UDim2.new(0,480,0,360)})
     end)
@@ -127,7 +140,6 @@ function Library:CreateWindow(titleText)
         page.Position = UDim2.new(0,10,0,85)
         page.BackgroundTransparency = 1
         page.Visible = false
-
         local layout = Instance.new("UIListLayout", page)
         layout.Padding = UDim.new(0,8)
 
@@ -155,9 +167,7 @@ function Library:CreateWindow(titleText)
             Instance.new("UICorner", btn)
             btn.MouseButton1Click:Connect(function()
                 Tween(btn, {BackgroundColor3 = Theme.Accent})
-                task.delay(0.15, function()
-                    Tween(btn, {BackgroundColor3 = Theme.Button})
-                end)
+                task.delay(0.15,function() Tween(btn, {BackgroundColor3 = Theme.Button}) end)
                 if callback then callback() end
             end)
         end
@@ -190,10 +200,14 @@ function Library:CreateWindow(titleText)
             bar.InputBegan:Connect(function(i)
                 if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
                     dragging = true
+                    main.Draggable = false -- disable GUI drag
                 end
             end)
-            UIS.InputEnded:Connect(function()
-                dragging = false
+            UIS.InputEnded:Connect(function(i)
+                if dragging then
+                    dragging = false
+                    main.Draggable = true -- re-enable GUI drag
+                end
             end)
             UIS.InputChanged:Connect(function(i)
                 if dragging then
@@ -205,9 +219,9 @@ function Library:CreateWindow(titleText)
             end)
         end
 
+        -- AddDropdown / AddKeybind / AddToggle logic can remain as previous version
         function Tab:AddDropdown(text, list, callback)
             local open = false
-
             local holder = Instance.new("Frame", page)
             holder.Size = UDim2.new(1,0,0,40)
             holder.BackgroundTransparency = 1
@@ -227,13 +241,12 @@ function Library:CreateWindow(titleText)
             options.BackgroundColor3 = Theme.Container
             options.ClipsDescendants = true
             Instance.new("UICorner", options)
-
             local listLayout = Instance.new("UIListLayout", options)
 
             btn.MouseButton1Click:Connect(function()
                 open = not open
                 Tween(options, {Size = open and UDim2.new(1,0,0,#list*35) or UDim2.new(1,0,0,0)})
-                Tween(holder, {Size = open and UDim2.new(1,0,0,45 + #list*35) or UDim2.new(1,0,0,40)})
+                Tween(holder, {Size = open and UDim2.new(1,0,0,45+#list*35) or UDim2.new(1,0,0,40)})
             end)
 
             for _,v in pairs(list) do
