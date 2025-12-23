@@ -93,32 +93,36 @@ function Library:CreateWindow(titleText)
     local pages = Instance.new("Folder", main)
     local CurrentTab
 
-    -- Minimize button (smooth)
-    local minimize = Instance.new("TextButton", main)
-    minimize.Size = UDim2.new(0,30,0,30)
-    minimize.Position = UDim2.new(1,-40,0,8)
-    minimize.Text = "-"
-    minimize.Font = Enum.Font.GothamBold
-    minimize.TextSize = 18
-    minimize.BackgroundColor3 = Theme.Button
-    minimize.TextColor3 = Theme.Text
-    Instance.new("UICorner", minimize)
-
-    local open = true
     minimize.MouseButton1Click:Connect(function()
-        open = not open
-        Tween(main, {Size = open and UDim2.new(0,480,0,360) or UDim2.new(0,480,0,55)})
-        for _,v in pairs(pages:GetChildren()) do
-            if open then
-                v.Visible = true
-                Tween(v, {Position = UDim2.new(0,10,0,85)})
-            else
-                Tween(v, {Position = UDim2.new(0,10,0,-v.AbsoluteSize.Y)})
-                task.delay(0.2,function() v.Visible = false end)
+    open = not open
+    if open then
+        -- Expand main frame
+        Tween(main, {Size = UDim2.new(0,480,0,360)})
+        -- Animate pages back
+        for _,page in pairs(pages:GetChildren()) do
+            page.Visible = true
+            Tween(page, {Size = UDim2.new(1,-20,1,-95)})
+            -- Optional: animate children if you want
+            for _,child in pairs(page:GetChildren()) do
+                if child:IsA("Frame") or child:IsA("TextButton") or child:IsA("TextLabel") then
+                    child.Visible = true
+                    Tween(child, {BackgroundTransparency = 0})
+                end
             end
         end
-        minimize.Text = open and "-" or "+"
-    end)
+    else
+        -- Collapse main frame
+        Tween(main, {Size = UDim2.new(0,480,0,55)})
+        -- Animate pages collapse
+        for _,page in pairs(pages:GetChildren()) do
+            Tween(page, {Size = UDim2.new(1,-20,0,0)})
+            task.delay(0.25, function()
+                page.Visible = false
+            end)
+        end
+    end
+    minimize.Text = open and "-" or "+"
+end)
 
     local tabsBar = Instance.new("Frame", main)
     tabsBar.Size = UDim2.new(1,0,0,36)
