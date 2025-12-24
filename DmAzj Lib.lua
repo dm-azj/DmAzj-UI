@@ -1,248 +1,248 @@
---// DmAzj UI Library (FINAL FIXED)
+--// DmAzj UI Library
+--// Clean Rewrite | Mobile Ready | Smooth Minimize
+--// Author: dm-azj
 
-local Library = {}
-Library.__index = Library
-
--- Services
-local Players = game:GetService("Players")
-local UIS = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
-local Player = Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
 
--- Prevent duplicate load
-if Player.PlayerGui:FindFirstChild("DmAzjUILoaded") then
-    warn("DmAzj UI already running")
-    return
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+-- Prevent duplicate UI
+if PlayerGui:FindFirstChild("DmAzjUI") then
+    PlayerGui.DmAzjUI:Destroy()
 end
 
-local flag = Instance.new("BoolValue")
-flag.Name = "DmAzjUILoaded"
-flag.Parent = Player.PlayerGui
-
--- Theme
-local Theme = {
-    Background = Color3.fromRGB(18,22,28),
-    Topbar = Color3.fromRGB(22,26,32),
-    Container = Color3.fromRGB(28,34,42),
-    Button = Color3.fromRGB(50,70,95),
-    Accent = Color3.fromRGB(90,130,200),
-    Text = Color3.fromRGB(235,235,235)
+local Library = {}
+Library.Theme = {
+    Background = Color3.fromRGB(20,20,20),
+    Topbar = Color3.fromRGB(25,25,25),
+    Accent = Color3.fromRGB(120,80,255),
+    Text = Color3.fromRGB(255,255,255),
+    Button = Color3.fromRGB(30,30,30)
 }
 
--- Tween helper
+--// Tween helper
 local function Tween(obj, props, time)
     TweenService:Create(
         obj,
-        TweenInfo.new(time or 0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+        TweenInfo.new(time or 0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
         props
     ):Play()
 end
 
--- Notification (single instance)
-local currentNotify
-function Library:Notify(text, dur)
-    dur = dur or 3
-    if currentNotify then currentNotify:Destroy() end
+--// Notification
+function Library:Notify(text, duration)
+    duration = duration or 2
 
-    local gui = Instance.new("ScreenGui", Player.PlayerGui)
+    local gui = Instance.new("ScreenGui", PlayerGui)
     gui.ResetOnSpawn = false
-    currentNotify = gui
 
-    local box = Instance.new("Frame", gui)
-    box.Size = UDim2.new(0,300,0,45)
-    box.Position = UDim2.new(1,320,1,-70)
-    box.BackgroundColor3 = Theme.Container
-    Instance.new("UICorner", box)
+    local frame = Instance.new("Frame", gui)
+    frame.Size = UDim2.fromOffset(300,50)
+    frame.Position = UDim2.new(1,-320,1,80)
+    frame.BackgroundColor3 = self.Theme.Background
+    frame.BorderSizePixel = 0
 
-    local lbl = Instance.new("TextLabel", box)
-    lbl.Size = UDim2.new(1,-20,1,0)
-    lbl.Position = UDim2.new(0,10,0,0)
-    lbl.BackgroundTransparency = 1
-    lbl.Text = text
-    lbl.TextColor3 = Theme.Text
-    lbl.Font = Enum.Font.Gotham
-    lbl.TextSize = 14
-    lbl.TextXAlignment = Left
+    Instance.new("UICorner", frame)
 
-    Tween(box,{Position=UDim2.new(1,-320,1,-70)})
-    task.delay(dur,function()
-        Tween(box,{Position=UDim2.new(1,320,1,-70)})
-        task.delay(0.3,function()
+    local label = Instance.new("TextLabel", frame)
+    label.Size = UDim2.fromScale(1,1)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = self.Theme.Text
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 14
+
+    Tween(frame, {Position = UDim2.new(1,-320,1,-70)}, 0.3)
+    task.delay(duration, function()
+        Tween(frame, {Position = UDim2.new(1,-320,1,80)}, 0.3)
+        task.delay(0.3, function()
             gui:Destroy()
-            currentNotify=nil
         end)
     end)
 end
 
--- Window
-function Library:CreateWindow(titleText)
-    local gui = Instance.new("ScreenGui", Player.PlayerGui)
+--// Create Window
+function Library:CreateWindow(title)
+    local gui = Instance.new("ScreenGui", PlayerGui)
+    gui.Name = "DmAzjUI"
     gui.ResetOnSpawn = false
 
     local main = Instance.new("Frame", gui)
-    main.Size = UDim2.new(0,480,0,360)
-    main.Position = UDim2.new(0.5,-240,0.5,-180)
-    main.BackgroundColor3 = Theme.Background
+    main.Size = UDim2.fromOffset(500,360)
+    main.Position = UDim2.new(0.5,-250,0.5,-180)
+    main.BackgroundColor3 = self.Theme.Background
+    main.BorderSizePixel = 0
     main.Active = true
     main.Draggable = true
+
     Instance.new("UICorner", main)
 
     -- Topbar
     local top = Instance.new("Frame", main)
-    top.Size = UDim2.new(1,0,0,45)
-    top.BackgroundColor3 = Theme.Topbar
+    top.Size = UDim2.new(1,0,0,40)
+    top.BackgroundColor3 = self.Theme.Topbar
+    top.BorderSizePixel = 0
     Instance.new("UICorner", top)
 
-    local title = Instance.new("TextLabel", top)
-    title.Size = UDim2.new(1,-60,1,0)
-    title.Position = UDim2.new(0,15,0,0)
-    title.BackgroundTransparency = 1
-    title.Text = titleText or "DmAzj UI"
-    title.Font = Enum.Font.GothamBold
-    title.TextSize = 18
-    title.TextColor3 = Theme.Text
-    title.TextXAlignment = Left
+    local titleLabel = Instance.new("TextLabel", top)
+    titleLabel.Size = UDim2.new(1,-80,1,0)
+    titleLabel.Position = UDim2.fromOffset(10,0)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = title
+    titleLabel.TextXAlignment = Left
+    titleLabel.TextColor3 = self.Theme.Text
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.TextSize = 15
 
-    -- Minimize button
-    local min = Instance.new("TextButton", top)
-    min.Size = UDim2.new(0,30,0,30)
-    min.Position = UDim2.new(1,-40,0.5,-15)
-    min.Text = "-"
-    min.Font = Enum.Font.GothamBold
-    min.TextSize = 18
-    min.BackgroundColor3 = Theme.Button
-    min.TextColor3 = Theme.Text
-    Instance.new("UICorner", min)
+    -- Minimize Button
+    local minimize = Instance.new("TextButton", top)
+    minimize.Size = UDim2.fromOffset(30,30)
+    minimize.Position = UDim2.new(1,-35,0.5,-15)
+    minimize.Text = "-"
+    minimize.Font = Enum.Font.GothamBold
+    minimize.TextSize = 18
+    minimize.BackgroundColor3 = self.Theme.Button
+    minimize.TextColor3 = self.Theme.Text
+    minimize.BorderSizePixel = 0
+    Instance.new("UICorner", minimize)
 
-    -- Tabs bar
-    local tabs = Instance.new("Frame", main)
-    tabs.Position = UDim2.new(0,0,0,45)
-    tabs.Size = UDim2.new(1,0,0,36)
-    tabs.BackgroundTransparency = 1
-    local tabLayout = Instance.new("UIListLayout", tabs)
-    tabLayout.FillDirection = Horizontal
-    tabLayout.Padding = UDim.new(0,8)
+    -- Tabs
+    local tabBar = Instance.new("Frame", main)
+    tabBar.Size = UDim2.new(0,120,1,-40)
+    tabBar.Position = UDim2.fromOffset(0,40)
+    tabBar.BackgroundColor3 = self.Theme.Topbar
+    tabBar.BorderSizePixel = 0
 
-    -- CONTENT HOLDER (THIS FIXES EVERYTHING)
-    local contentHolder = Instance.new("Frame", main)
-    contentHolder.Position = UDim2.new(0,10,0,85)
-    contentHolder.Size = UDim2.new(1,-20,1,-95)
-    contentHolder.BackgroundTransparency = 1
-    contentHolder.ClipsDescendants = true
+    local tabLayout = Instance.new("UIListLayout", tabBar)
+    tabLayout.Padding = UDim.new(0,6)
 
-    local pages = {}
-    local currentPage
+    local pages = Instance.new("Folder", main)
     local minimized = false
+    local savedSize = main.Size
 
-    -- Minimize FIX (ONE container tween)
-    min.MouseButton1Click:Connect(function()
+    minimize.MouseButton1Click:Connect(function()
         minimized = not minimized
-        min.Text = minimized and "+" or "-"
+        minimize.Text = minimized and "+" or "-"
 
-        Tween(main,{
-            Size = minimized and UDim2.new(0,480,0,45) or UDim2.new(0,480,0,360)
-        })
-
-        Tween(contentHolder,{
-            Size = minimized and UDim2.new(1,-20,0,0) or UDim2.new(1,-20,1,-95)
-        })
+        if minimized then
+            savedSize = main.Size
+            Tween(main, {Size = UDim2.fromOffset(500,40)}, 0.25)
+            for _,p in pairs(pages:GetChildren()) do
+                Tween(p, {Size = UDim2.new(1,-130,0,0)}, 0.25)
+                task.delay(0.25, function()
+                    p.Visible = false
+                end)
+            end
+        else
+            Tween(main, {Size = savedSize}, 0.25)
+            for _,p in pairs(pages:GetChildren()) do
+                p.Visible = true
+                Tween(p, {Size = UDim2.new(1,-130,1,-50)}, 0.25)
+            end
+        end
     end)
 
+    -- Window Object
     local Window = {}
 
     function Window:AddTab(name)
-        local tab = Instance.new("TextButton", tabs)
-        tab.Size = UDim2.new(0,100,1,0)
-        tab.Text = name
-        tab.Font = Enum.Font.Gotham
-        tab.TextSize = 14
-        tab.BackgroundColor3 = Theme.Button
-        tab.TextColor3 = Theme.Text
-        Instance.new("UICorner", tab)
+        local tabBtn = Instance.new("TextButton", tabBar)
+        tabBtn.Size = UDim2.fromOffset(100,30)
+        tabBtn.Text = name
+        tabBtn.Font = Enum.Font.Gotham
+        tabBtn.TextSize = 13
+        tabBtn.BackgroundColor3 = Library.Theme.Button
+        tabBtn.TextColor3 = Library.Theme.Text
+        tabBtn.BorderSizePixel = 0
+        Instance.new("UICorner", tabBtn)
 
-        local page = Instance.new("Frame", contentHolder)
-        page.Size = UDim2.new(1,0,1,0)
+        local page = Instance.new("ScrollingFrame", main)
+        page.Size = UDim2.new(1,-130,1,-50)
+        page.Position = UDim2.fromOffset(120,45)
+        page.CanvasSize = UDim2.new(0,0,0,0)
+        page.ScrollBarImageTransparency = 1
         page.BackgroundTransparency = 1
         page.Visible = false
+        page.Parent = pages
+
         local layout = Instance.new("UIListLayout", page)
         layout.Padding = UDim.new(0,8)
-
-        tab.MouseButton1Click:Connect(function()
-            if currentPage then currentPage.Visible=false end
-            page.Visible=true
-            currentPage=page
+        layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            page.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
         end)
 
-        if not currentPage then
-            page.Visible=true
-            currentPage=page
-        end
+        tabBtn.MouseButton1Click:Connect(function()
+            for _,p in pairs(pages:GetChildren()) do
+                p.Visible = false
+            end
+            page.Visible = true
+        end)
 
         local Tab = {}
 
-        function Tab:AddButton(text,cb)
-            local b=Instance.new("TextButton",page)
-            b.Size=UDim2.new(1,0,0,40)
-            b.Text=text
-            b.Font=Enum.Font.Gotham
-            b.TextSize=14
-            b.BackgroundColor3=Theme.Button
-            b.TextColor3=Theme.Text
-            Instance.new("UICorner",b)
-            b.MouseButton1Click:Connect(function()
-                Tween(b,{BackgroundColor3=Theme.Accent},0.1)
-                task.delay(0.1,function()
-                    Tween(b,{BackgroundColor3=Theme.Button},0.1)
-                end)
-                if cb then cb() end
+        function Tab:AddButton(text, callback)
+            local btn = Instance.new("TextButton", page)
+            btn.Size = UDim2.new(1,-10,0,40)
+            btn.Text = text
+            btn.Font = Enum.Font.Gotham
+            btn.TextSize = 14
+            btn.BackgroundColor3 = Library.Theme.Button
+            btn.TextColor3 = Library.Theme.Text
+            btn.BorderSizePixel = 0
+            Instance.new("UICorner", btn)
+
+            btn.MouseButton1Click:Connect(function()
+                pcall(callback)
             end)
         end
 
-        function Tab:AddSlider(text,min,max,cb)
-            local hold=Instance.new("Frame",page)
-            hold.Size=UDim2.new(1,0,0,55)
-            hold.BackgroundTransparency=1
+        function Tab:AddSlider(text, min, max, callback)
+            local frame = Instance.new("Frame", page)
+            frame.Size = UDim2.new(1,-10,0,50)
+            frame.BackgroundColor3 = Library.Theme.Button
+            frame.BorderSizePixel = 0
+            Instance.new("UICorner", frame)
 
-            local lbl=Instance.new("TextLabel",hold)
-            lbl.Size=UDim2.new(1,0,0,20)
-            lbl.BackgroundTransparency=1
-            lbl.Text=text
-            lbl.TextColor3=Theme.Text
-            lbl.Font=Enum.Font.Gotham
-            lbl.TextSize=13
+            local bar = Instance.new("Frame", frame)
+            bar.Size = UDim2.new(0,0,1,0)
+            bar.BackgroundColor3 = Library.Theme.Accent
+            Instance.new("UICorner", bar)
 
-            local bar=Instance.new("Frame",hold)
-            bar.Position=UDim2.new(0,0,0,30)
-            bar.Size=UDim2.new(1,0,0,10)
-            bar.BackgroundColor3=Theme.Container
-            Instance.new("UICorner",bar)
+            local dragging = false
 
-            local fill=Instance.new("Frame",bar)
-            fill.Size=UDim2.new(0,0,1,0)
-            fill.BackgroundColor3=Theme.Accent
-            Instance.new("UICorner",fill)
-
-            local dragging=false
-            bar.InputBegan:Connect(function(i)
-                if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Touch then
-                    dragging=true
-                    main.Draggable=false
+            frame.InputBegan:Connect(function(i)
+                if i.UserInputType == Enum.UserInputType.MouseButton1
+                or i.UserInputType == Enum.UserInputType.Touch then
+                    dragging = true
                 end
             end)
 
-            UIS.InputEnded:Connect(function()
-                dragging=false
-                main.Draggable=true
-            end)
-
-            UIS.InputChanged:Connect(function(i)
-                if dragging then
-                    local x=math.clamp((i.Position.X-bar.AbsolutePosition.X)/bar.AbsoluteSize.X,0,1)
-                    fill.Size=UDim2.new(x,0,1,0)
-                    local val=math.floor(min+(max-min)*x)
-                    if cb then cb(val) end
+            UserInputService.InputEnded:Connect(function(i)
+                if i.UserInputType == Enum.UserInputType.MouseButton1
+                or i.UserInputType == Enum.UserInputType.Touch then
+                    dragging = false
                 end
             end)
+
+            UserInputService.InputChanged:Connect(function(i)
+                if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement
+                or i.UserInputType == Enum.UserInputType.Touch) then
+                    local pct = math.clamp(
+                        (i.Position.X - frame.AbsolutePosition.X) / frame.AbsoluteSize.X,
+                        0,1
+                    )
+                    bar.Size = UDim2.new(pct,0,1,0)
+                    local value = math.floor(min + (max - min) * pct)
+                    pcall(callback, value)
+                end
+            end)
+        end
+
+        if #pages:GetChildren() == 1 then
+            page.Visible = true
         end
 
         return Tab
