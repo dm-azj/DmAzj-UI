@@ -1,9 +1,10 @@
 --// DmAzj UI Library
---// First Clean Rewrite Version
---// Simple | Stable | Mobile Ready
+--// First Clean Rewrite + Minimize Button
+--// Stable | Simple | Mobile Ready
 
 local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
 
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
@@ -22,15 +23,6 @@ Library.Theme = {
     Accent = Color3.fromRGB(120,80,255),
     Text = Color3.fromRGB(255,255,255)
 }
-
--- Simple tween helper
-local function Tween(obj, props, time)
-    TweenService:Create(
-        obj,
-        TweenInfo.new(time or 0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-        props
-    ):Play()
-end
 
 -- Notification
 function Library:Notify(text, duration)
@@ -65,6 +57,7 @@ function Library:CreateWindow(title)
     gui.Name = "DmAzjUI"
     gui.ResetOnSpawn = false
 
+    -- MAIN WINDOW
     local main = Instance.new("Frame", gui)
     main.Size = UDim2.fromOffset(480,340)
     main.Position = UDim2.new(0.5,-240,0.5,-170)
@@ -74,7 +67,7 @@ function Library:CreateWindow(title)
     main.Draggable = true
     Instance.new("UICorner", main)
 
-    -- Topbar
+    -- TOPBAR
     local top = Instance.new("Frame", main)
     top.Size = UDim2.new(1,0,0,40)
     top.BackgroundColor3 = Library.Theme.Topbar
@@ -90,6 +83,24 @@ function Library:CreateWindow(title)
     titleLabel.TextSize = 15
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.TextColor3 = Library.Theme.Text
+
+    -- LEFT MINIMIZE BUTTON (Dm)
+    local mini = Instance.new("TextButton", gui)
+    mini.Size = UDim2.fromOffset(45,45)
+    mini.Position = UDim2.new(0,10,0.5,-22)
+    mini.BackgroundColor3 = Library.Theme.Accent
+    mini.Text = "Dm"
+    mini.Font = Enum.Font.GothamBold
+    mini.TextSize = 14
+    mini.TextColor3 = Color3.new(1,1,1)
+    mini.BorderSizePixel = 0
+    mini.Active = true
+    Instance.new("UICorner", mini)
+
+    -- Toggle Window
+    mini.MouseButton1Click:Connect(function()
+        main.Visible = not main.Visible
+    end)
 
     -- Tabs
     local tabBar = Instance.new("Frame", main)
@@ -138,7 +149,6 @@ function Library:CreateWindow(title)
             page.Visible = true
         end)
 
-        -- Auto open first tab
         if #pages:GetChildren() == 1 then
             page.Visible = true
         end
@@ -163,7 +173,7 @@ function Library:CreateWindow(title)
 
         function Tab:AddSlider(text, min, max, callback)
             local frame = Instance.new("Frame", page)
-            frame.Size = UDim2.new(1,-10,0,50)
+            frame.Size = UDim2.new(1,-10,0,40)
             frame.BackgroundColor3 = Library.Theme.Button
             frame.BorderSizePixel = 0
             Instance.new("UICorner", frame)
@@ -182,14 +192,14 @@ function Library:CreateWindow(title)
                 end
             end)
 
-            game:GetService("UserInputService").InputEnded:Connect(function(i)
+            UserInputService.InputEnded:Connect(function(i)
                 if i.UserInputType == Enum.UserInputType.MouseButton1
                 or i.UserInputType == Enum.UserInputType.Touch then
                     dragging = false
                 end
             end)
 
-            game:GetService("UserInputService").InputChanged:Connect(function(i)
+            UserInputService.InputChanged:Connect(function(i)
                 if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement
                 or i.UserInputType == Enum.UserInputType.Touch) then
                     local pct = math.clamp(
